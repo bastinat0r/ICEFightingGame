@@ -12,6 +12,7 @@ public class TestAI implements AIInterface {
 	@Override
 	public void close() {
 		// TODO Auto-generated method stub
+		/* Datei Speichern */
 
 	}
 
@@ -62,19 +63,24 @@ public class TestAI implements AIInterface {
 		action_keymap[3].D = true;
 		action_keymap[4].R = true;
 		*/
-				
+		/*
+		 * TODO load file from disk
+		 */
 		return 0;
 	}
-	private int chose_action_from_state() {
+	private int chose_action_from_state(State s) {
 		float[] testvalues = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5.5f};
 		float value_offset = 10f;
 		return rnd.nextInt(20);
 	}
+	
+	private State getStateFromGame(){
+		return new State();
+	}
 
 	@Override
 	public Key input() {
-		// every key is set randomly.
-		int x = chose_action_from_state();
+		int x = chose_action_from_state(getStateFromGame());
 
 
 		return action_keymap[x];
@@ -82,7 +88,6 @@ public class TestAI implements AIInterface {
 
 	@Override
 	public void processing() {
-		// TODO Auto-generated method stub
 
 
 	}
