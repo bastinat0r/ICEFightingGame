@@ -8,17 +8,18 @@ public class ReadSaveData {
 	
 	public static void saveMatrixData(String ownChar, String enemyChar, MatrixValue[][][] Matrix) throws Exception 
 	{		
-		Writer fw = null;
+		Writer fw;
 		fw = new FileWriter( ownChar+"_"+enemyChar+".txt" );
 		try
 		{
-			for ( int state = 0; state < 4096; state++ )
+			for ( int state = 0; state < 4096; state++ ) //jede Kombination der boolschen Zustände
 			{
-				for ( int enemyState = 0 ; enemyState < 5; enemyState++)
+				for ( int enemyState = 0 ; enemyState < 5; enemyState++) //jeder Gegnerstatus
 				{
-					for ( int action = 0; action < 20; action++ )
+					for ( int action = 0; action < 20; action++ ) //jede mögliche Spieleraktion
 					{
-						if (Matrix[state][enemyState][action] == null){
+						if (Matrix[state][enemyState][action] == null) //Initiale Anlage
+						{
 							fw.write( "0.0|0" );
 						}
 						else{
