@@ -16,7 +16,7 @@ public class TestAI implements AIInterface {
 	private static Key[] action_keymap;
 	private static Key[] action_keymap_reversed;
 	private LinkedList<StateAction> actionQueue;
-	private final int StateActionLength = 100;
+	private final int StateActionLength = 50;
 	private State currentState;
 	private int lastHPDiff;
 	private int myHP;
@@ -129,6 +129,15 @@ public class TestAI implements AIInterface {
 		}
 		return maxIndex;
 	}
+	private ArrayList<Integer> posIndex(float[] values) {
+		ArrayList<Integer> maxIndex = new ArrayList<Integer>();
+		for (int i = 0; i < values.length; i++) {
+			if(values[i] > 0){
+				maxIndex.add(i);
+			}
+		}
+		return maxIndex;
+	}
 
 	private int chose_action_from_state(State s) {
 
@@ -149,11 +158,19 @@ public class TestAI implements AIInterface {
 		}
 
 
-		float exploration_propability = 0.05f;
+		float exploration_propability = 0.1f;
+		float exploration_propability2 = 0.1f;
 		if (rnd.nextDouble() > exploration_propability) {
 			ArrayList<Integer> max = maxIndex(rewards);
-			max.get(rnd.nextInt(max.size())); /* return randomly selected action from actions with best value */
+			return max.get(rnd.nextInt(max.size())); /* return randomly selected action from actions with best value */
 		}
+		
+		if (rnd.nextDouble() > exploration_propability) {
+			ArrayList<Integer> max = posIndex(rewards);
+			if(max.size() > 0)
+				return max.get(rnd.nextInt(max.size())); /* return randomly selected action from actions with best value */
+		}
+		
 
 		return rnd.nextInt(20); // return random action
 	}
@@ -163,19 +180,29 @@ public class TestAI implements AIInterface {
 		if(actionQueue.size() > StateActionLength) {
 			StateAction s_fin = actionQueue.remove();
 			MatrixValue v = reward_matrix[s_fin.toInt()][s_fin.action];
-			v.setReward(v.getReward() + s_fin.reward);
-			v.setVisitors(v.getVisitors() + 1);
+			if (s_fin.reward == 0.0f) {
+				v.setReward(v.getReward() + s_fin.reward - 0.1f);
+				v.setVisitors(v.getVisitors() + 1);
+			} else {
+				v.setReward(v.getReward() + s_fin.reward);
+				v.setVisitors(v.getVisitors() + 1);
+			}
 			/*TODO add s_fin to knowledge base -> not only mockup function (replaceme)*/
 			reward_matrix[s_fin.toInt()][s_fin.action] = v;
 			switch (v.getVisitors()) {
-			case 1:
-				System.out.println(s_fin.toInt() + " : " + s_fin.action + " : " + s_fin.reward);
+			case 3:
+				System.out.println(s_fin.toInt() + " : " + s_fin.action + " : " + v.getReward());
 				break;
 
 			case 10:
-				System.out.println("x" + s_fin.toInt() + " : " + s_fin.action + " : " + s_fin.reward);
+				System.out.println("x" + s_fin.toInt() + " : " + s_fin.action + " : " + v.getReward());
+				break;
 			case 100:
-				System.out.println("y" + s_fin.toInt() + " : " + s_fin.action + " : " + s_fin.reward);
+				System.out.println("y" + s_fin.toInt() + " : " + s_fin.action + " : " + v.getReward());
+				break;
+			case 1000:
+				System.out.println("z" + s_fin.toInt() + " : " + s_fin.action + " : " + v.getReward() / v.getVisitors());
+				break;
 			default:
 				break;
 			}
@@ -195,7 +222,7 @@ public class TestAI implements AIInterface {
 			for (Iterator<StateAction> iterator = actionQueue.iterator(); iterator.hasNext();) {
 				StateAction stateAction = (StateAction) iterator.next();
 				stateAction.reward += hpDiff;
-				hpDiff *= 1.05f;
+				hpDiff *= 1.1f;
 			}
 		}
 		lastHPDiff = myHP - enemyHP;
