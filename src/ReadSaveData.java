@@ -6,30 +6,28 @@ import java.io.Writer;
 
 public class ReadSaveData {
 	
-	public static void saveMatrixData(String ownChar, String enemyChar, MatrixValue[][][] Matrix) throws Exception 
+	public static void saveMatrixData(String ownChar, String enemyChar, MatrixValue[][] Matrix) throws Exception 
 	{		
 		Writer fw;
-		fw = new FileWriter( ownChar+"_"+enemyChar+".txt" );
+		fw = new FileWriter( "./data/aiData" + ownChar+"_"+enemyChar+".txt" );
 		try
 		{
-			for ( int state = 0; state < 4096; state++ ) //jede Kombination der boolschen Zustände
+			for ( int state = 0; state < 1 << 14; state++ ) //jede Kombination der boolschen Zustï¿½nde
 			{
-				for ( int enemyState = 0 ; enemyState < 5; enemyState++) //jeder Gegnerstatus
+				for ( int action = 0; action < 20; action++ ) //jede mï¿½gliche Spieleraktion
 				{
-					for ( int action = 0; action < 20; action++ ) //jede mögliche Spieleraktion
+					if (Matrix[state][action] == null) //Initiale Anlage
 					{
-						if (Matrix[state][enemyState][action] == null) //Initiale Anlage
-						{
-							fw.write( "0.0|0" );
-						}
-						else{
-							fw.write( Float.toString(Matrix[state][enemyState][action].getReward()) );
-							fw.write( "|" );
-							fw.write( Integer.toString(Matrix[state][enemyState][action].getVisitors()) );
-						}
-						fw.append( System.getProperty("line.separator") ); // e.g. "\n"
+						fw.write( "0.0|0" );
 					}
+					else{
+						fw.write( Float.toString(Matrix[state][action].getReward()) );
+						fw.write( "|" );
+						fw.write( Integer.toString(Matrix[state][action].getVisitors()) );
+					}
+					fw.append( System.getProperty("line.separator") ); // e.g. "\n"
 				}
+
 			}
 		}
 		catch ( IOException e ) {
@@ -41,25 +39,36 @@ public class ReadSaveData {
 		}
 	}
 	
-	public static MatrixValue[][][] readMatrixData (String ownChar, String enemyChar) throws Exception {
-		MatrixValue[][][] Matrix = new MatrixValue[4096][5][20];
-		FileReader fr = new FileReader(ownChar+"_"+enemyChar+".txt");
-	    BufferedReader br = new BufferedReader(fr);
-	    String line = "";
-	    int splitPosition;
-    	for ( int state = 0; state < 4096; state++ )
+	public static MatrixValue[][] readMatrixData (String ownChar, String enemyChar){
+		
+		MatrixValue[][] Matrix = new MatrixValue[1 << 14][20];
+		for ( int state = 0; state < 1<<14; state++ )
 		{
-			for ( int enemyState = 0 ; enemyState < 5; enemyState++)
+			for ( int action = 0; action < 20; action++ )
+			{
+				Matrix[state][action] = new MatrixValue(0,0);					
+			}
+		}
+		try {
+			FileReader fr = new FileReader("./data/aiData" + ownChar+"_"+enemyChar+".txt");
+			BufferedReader br = new BufferedReader(fr);
+			String line = "";
+			int splitPosition;
+			for ( int state = 0; state < 1<<14; state++ )
 			{
 				for ( int action = 0; action < 20; action++ )
 				{
 					line = br.readLine();
 					splitPosition = line.indexOf("|");
-					Matrix[state][enemyState][action] = new MatrixValue(Float.parseFloat(line.substring(0, splitPosition)),Integer.parseInt(line.substring(splitPosition+1)));					
+					Matrix[state][action] = new MatrixValue(Float.parseFloat(line.substring(0, splitPosition)),Integer.parseInt(line.substring(splitPosition+1)));					
 				}
+
 			}
+			br.close();
 		}
-	    br.close();
+		catch (IOException e) {
+			System.out.println("Could not read file, starting with 0.0|0");	
+		}
 		return Matrix;
 	}
 }

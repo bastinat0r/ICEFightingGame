@@ -1,8 +1,12 @@
 import gameInterface.AIInterface;
+import structs.CharacterData;
 import structs.FrameData;
 import structs.GameData;
 import structs.Key;
 import java.util.Random;
+
+import commandcenter.CommandCenter;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -19,36 +23,19 @@ public class TestAI implements AIInterface {
 	private boolean player;
 	private GameData game;
 	private FrameData frame;
-	private float[] replaceme;
-	private int[] replaceme_visits;
-	
+	private MatrixValue[][] reward_matrix;
+	private CommandCenter cc;
+
 	@Override
 	public void close() {
 		// TODO Auto-generated method stub
 		/* Datei Speichern */
-		String s1 = "replaceme = new float[]{";
-		for (int i = 0; i < replaceme.length; i++) {
-			s1 = s1 + replaceme[i] + "f, ";	
+		try {
+			ReadSaveData.saveMatrixData("a", "a", reward_matrix);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		System.out.println(s1 + "};");
-		
-		
-		s1 = "replaceme_visits = new int[]{";
-		for (int i = 0; i < replaceme_visits.length; i++) {
-			s1 = s1 + replaceme_visits[i] + ", ";	
-		}
-		System.out.println(s1 + "};");
-		
-		s1 = "";
-		for (int i = 0; i < 20; i++) {
-			s1 = s1 +" m " + i +": ";
-			if(replaceme_visits[i] == 0) {
-				s1 = s1 + "0, ";
-			} else {
-				s1 = s1 + replaceme[i] / replaceme_visits[i];
-			}
-		}
-		System.out.println(s1);
 	}
 
 	@Override
@@ -61,6 +48,7 @@ public class TestAI implements AIInterface {
 	public void getInformation(FrameData arg0) {
 		// TODO Auto-generated method stub
 		frame = arg0;
+		cc.setFrameData(frame, player);
 	}
 
 	@Override
@@ -93,8 +81,6 @@ public class TestAI implements AIInterface {
 		player  = arg1;
 		game = arg0;
 		frame = new FrameData();
-		replaceme = new float[]{66.967155f, -56.12577f, 75.63395f, -27.786104f, 91.81734f, -55.807957f, 119.173965f, 305.30548f, 38.960567f, 55.048256f, -25.1469f, 208.79381f, 552.97925f, 72.88812f, 9.529953f, 232.4335f, 3.6648722f, 68.93345f, 221.60529f, -1.3583927f};
-		replaceme_visits = new int[]{1105, 1108, 1137, 1096, 1127, 1091, 1126, 1154, 1104, 1081, 1107, 1110, 1121, 1097, 1071, 1057, 1128, 1132, 1049, 1139};
 
 		actionQueue = new LinkedList<StateAction>();
 		lastHPDiff = 0;
@@ -106,13 +92,14 @@ public class TestAI implements AIInterface {
 		action_keymap[3].R = true;
 		action_keymap[3].D = true;
 		action_keymap[4].R = true;
-		*/
-		/*
-		 * TODO load file from disk
 		 */
+		
+		reward_matrix = ReadSaveData.readMatrixData("a", "a");
+		cc = new CommandCenter();
+		currentState = new State(0);
 		return 0;
 	}
-	
+
 	private ArrayList<Integer> maxIndex(float[] values) {
 		ArrayList<Integer> maxIndex = new ArrayList<Integer>();
 		float maxValue = Float.NEGATIVE_INFINITY;
@@ -127,53 +114,70 @@ public class TestAI implements AIInterface {
 		}
 		return maxIndex;
 	}
-	
+
 	private int chose_action_from_state(State s) {
-		
-		float[] testvalues = new float[20]; /* mockup for rewards of each action */
-		for (int i = 0; i < testvalues.length; i++) {
-			if(replaceme_visits[i] == 0) {
-				testvalues[i] = 0;
+
+		float[] rewards = new float[20]; /* rewards of each action */
+
+		for (int i = 0; i < rewards.length; i++) {
+			if(reward_matrix == null) {
+				System.err.println("Reward Matrix not initialized" );
+			}
+			if(reward_matrix[s.toInt()] == null) {
+				System.err.println("Reward Matrix [" + s.toInt() + "] not initialized" );
+			}
+			if(reward_matrix[s.toInt()][i].getVisitors() == 0) {
+				rewards[i] = 0;
 			} else {
-				testvalues[i] = replaceme[i] / replaceme_visits[i];
+				rewards[i] = reward_matrix[s.toInt()][i].getReward() / reward_matrix[s.toInt()][i].getVisitors();
 			}
 		}
-		
+
+
 		float exploration_propability = 0.05f;
 		if (rnd.nextDouble() > exploration_propability) {
-			ArrayList<Integer> max = maxIndex(testvalues);
+			ArrayList<Integer> max = maxIndex(rewards);
 			max.get(rnd.nextInt(max.size())); /* return randomly selected action from actions with best value */
 		}
+
 		return rnd.nextInt(20); // return random action
-	}
-	
-	private State getStateFromGame(){
-		return new State();
 	}
 
 	private int insertStateIntoActionQueue(StateAction s){
 		actionQueue.add(s);
 		if(actionQueue.size() > StateActionLength) {
 			StateAction s_fin = actionQueue.remove();
-			replaceme[s_fin.action] += s_fin.reward;
-			replaceme_visits[s_fin.action]++;
+			MatrixValue v = reward_matrix[s_fin.toInt()][s_fin.action];
+			v.setReward(v.getReward() + s_fin.reward);
+			v.setVisitors(v.getVisitors() + 1);
 			/*TODO add s_fin to knowledge base -> not only mockup function (replaceme)*/
-			
-			
+			reward_matrix[s_fin.toInt()][s_fin.action] = v;
+			switch (v.getVisitors()) {
+			case 1:
+				System.out.println(s_fin.toInt() + " : " + s_fin.action + " : " + s_fin.reward);
+				break;
+
+			case 10:
+				System.out.println("x" + s_fin.toInt() + " : " + s_fin.action + " : " + s_fin.reward);
+			case 100:
+				System.out.println("y" + s_fin.toInt() + " : " + s_fin.action + " : " + s_fin.reward);
+			default:
+				break;
+			}
 		}
-		
+
 		return actionQueue.size();
 	}
-	
+
 	private void addRewards() {
 		float hpDiff = (float)(myHP - enemyHP - lastHPDiff);
-		
+
 		if(hpDiff != 0) {
 			if(myHP == 0 && enemyHP == 0) {
 				return;
 			}
 			hpDiff /= 100;
-			for (Iterator iterator = actionQueue.iterator(); iterator.hasNext();) {
+			for (Iterator<StateAction> iterator = actionQueue.iterator(); iterator.hasNext();) {
 				StateAction stateAction = (StateAction) iterator.next();
 				stateAction.reward += hpDiff;
 				hpDiff *= 1.05f;
@@ -183,9 +187,8 @@ public class TestAI implements AIInterface {
 	}
 	@Override
 	public Key input() {
-		currentState = getStateFromGame();
 		int x = chose_action_from_state(currentState);
-		StateAction s = new StateAction(currentState, x);
+		StateAction s = new StateAction(currentState.toInt(), x);
 		insertStateIntoActionQueue(s);
 		return action_keymap[x];
 	}
@@ -193,6 +196,11 @@ public class TestAI implements AIInterface {
 	@Override
 	public void processing() {
 		if(!frame.getEmptyFlag() && frame.getRemainingTime() > 0) {
+			CharacterData me = this.cc.getMyCharacter();
+			
+			this.currentState.recordNewHitbox(me.attack.getAttackType(),cc.getMyY(),cc.getMyX(),me.getAttack().getHitAreaNow().getL(),me.getAttack().getHitAreaNow().getR(),me.getAttack().getHitAreaNow().getB(),me.getAttack().getHitAreaNow().getT());
+			this.currentState.stateRefresh(this.cc.getEnemyCharacter().getState().toString(),cc.getMyY(),cc.getMyX(),cc.getDistanceX());
+
 			myHP = frame.getMyCharacter(player).getHp();
 			enemyHP = frame.getOpponentCharacter(player).getHp();
 			addRewards();
