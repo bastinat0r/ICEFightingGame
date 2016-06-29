@@ -16,39 +16,25 @@ public class State {
 	public String enemy_state; /* stehen, vor, zur�ck, fern, nahkampf */
 	
 	public State(String enemyState,int MyY,int MyX,int enemyDistance){
-		for (int i = 0;i<this.hitboxes.length;i++ ){
-			
-			if (enemyDistance >= hitboxes[i].left || enemyDistance <= hitboxes[i].right){
-				this.close_to_enemy = true;
-				this.far_from_enemy = false;
-			}
-			else{
-				this.close_to_enemy = false;
-				this.far_from_enemy = true;
-			}
-			this.enemy_state = enemyState;
-		}
+		this.stateRefresh(enemyState, MyY, MyX, enemyDistance);
 	}
 	public void stateRefresh(String enemyState,int MyY,int MyX,int enemyDistance){
-		for (int i = 0;i<this.hitboxes.length;i++ ){
-			if (enemyDistance >= hitboxes[i].left || enemyDistance <= hitboxes[i].right){
-				this.close_to_enemy = true;
-				this.far_from_enemy = false;
-			}
-			else{
-				this.close_to_enemy = false;
-				this.far_from_enemy = true;
-			}	
-			this.enemy_state = enemyState;
-		}
+		
+		int ed = Math.min(255, enemyDistance);
+		boolean t = true;
+		System.out.println("ed = " + enemyDistance);
+		System.out.println("hl = " + hitboxes[1].left);
+		System.out.println("hr = " + hitboxes[1].right);
+		
 	}
 	
 	public void recordNewHitbox(int attackType,int MyY,int MyX,int hitboxL, int hitboxR, int hitboxB, int hitboxT){
-		if(this.hitboxes[attackType] != null){
-			Hitbox h = new Hitbox(attackType,MyX + hitboxL,MyX + hitboxR,MyY + hitboxT,MyY + hitboxB);//Hier muss man mal gucken ob das mit der addition �berhaubt n�tig ist
-			this.hitboxes[h.attacktype] = h;
-		}
-		
+		System.out.println(attackType);
+		System.out.println(MyX + "\t" + MyY);
+		System.out.println(hitboxL + "\t" + hitboxT);
+		System.out.println((hitboxL - MyX) + "\t" + (hitboxT - MyY));
+		Hitbox h = new Hitbox(attackType, hitboxL - MyX, hitboxR - MyX, hitboxT - MyY, hitboxB - MyY);//Hier muss man mal gucken ob das mit der addition �berhaubt n�tig ist -> NEIN!
+		this.hitboxes[h.attacktype] = h;
 	}
 	
 	public Hitbox[] getHitboxes(){

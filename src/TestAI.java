@@ -14,7 +14,8 @@ import java.util.LinkedList;
 public class TestAI implements AIInterface {
 	public Random rnd;
 	private static Key[] action_keymap;
-	private LinkedList<StateAction> actionQueue; 
+	private static Key[] action_keymap_reversed;
+	private LinkedList<StateAction> actionQueue;
 	private final int StateActionLength = 100;
 	private State currentState;
 	private int lastHPDiff;
@@ -31,7 +32,7 @@ public class TestAI implements AIInterface {
 		// TODO Auto-generated method stub
 		/* Datei Speichern */
 		try {
-			ReadSaveData.saveMatrixData("a", "a", reward_matrix);
+			ReadSaveData.saveMatrixData(game.getMyName(player), game.getOpponentName(player), reward_matrix);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -78,23 +79,37 @@ public class TestAI implements AIInterface {
 				action_keymap[i].C = true;
 			}
 		}
+		action_keymap_reversed = new Key[20];
+		for(int i = 0; i<action_keymap_reversed.length; i++){
+			action_keymap_reversed[i] = new Key();
+			if(i%5 == 0 || i%5 == 1) {
+				action_keymap_reversed[i].R = true;
+			}
+			if(i%5 == 1 || i%5 == 2 || i%5 == 3){
+				action_keymap_reversed[i].D = true;
+			}
+			if(i%5 == 3 || i%5 == 4) {
+				action_keymap_reversed[i].L = true;
+			}
+			if(i >=5 && i < 10) {
+				action_keymap_reversed[i].A = true;
+			}
+			if(i >=10 && i < 15) {
+				action_keymap_reversed[i].B = true;
+			}
+			if(i >=15 && i < 20) {
+				action_keymap_reversed[i].C = true;
+			}
+		}
 		player  = arg1;
 		game = arg0;
 		frame = new FrameData();
 
 		actionQueue = new LinkedList<StateAction>();
 		lastHPDiff = 0;
-		/*
-		action_keymap[0].L = true;
-		action_keymap[1].L = true;
-		action_keymap[1].D = true;
-		action_keymap[2].D = true;
-		action_keymap[3].R = true;
-		action_keymap[3].D = true;
-		action_keymap[4].R = true;
-		 */
 		
-		reward_matrix = ReadSaveData.readMatrixData("a", "a");
+		
+		reward_matrix = ReadSaveData.readMatrixData(game.getMyName(player), game.getOpponentName(player));
 		cc = new CommandCenter();
 		currentState = new State(0);
 		return 0;
@@ -190,7 +205,12 @@ public class TestAI implements AIInterface {
 		int x = chose_action_from_state(currentState);
 		StateAction s = new StateAction(currentState.toInt(), x);
 		insertStateIntoActionQueue(s);
-		return action_keymap[x];
+		try {
+			return cc.getMyX() < cc.getEnemyX() ? action_keymap[x] : action_keymap_reversed[x]; // reverse Keymap if enemy character is to our left
+		} catch (NullPointerException e) {
+			System.out.println("CC not initialized");
+			return action_keymap[x];
+		}
 	}
 
 	@Override
