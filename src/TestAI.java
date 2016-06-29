@@ -218,7 +218,6 @@ public class TestAI implements AIInterface {
 		if(!frame.getEmptyFlag() && frame.getRemainingTime() > 0) {
 			CharacterData me = this.cc.getMyCharacter();
 			
-			this.currentState.recordNewHitbox(me.attack.getAttackType(),cc.getMyY(),cc.getMyX(),me.getAttack().getHitAreaNow().getL(),me.getAttack().getHitAreaNow().getR(),me.getAttack().getHitAreaNow().getB(),me.getAttack().getHitAreaNow().getT());
 			this.currentState.stateRefresh(this.cc.getEnemyCharacter().getState().toString(),cc.getMyY(),cc.getMyX(),cc.getDistanceX());
 
 			myHP = frame.getMyCharacter(player).getHp();
