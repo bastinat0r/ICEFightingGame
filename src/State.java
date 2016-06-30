@@ -13,8 +13,7 @@ public class State {
 		
 		distance = Math.min(255, enemyDistance);
 		this.enemy_state = enemyState;
-		boolean t = true;
-		
+	
 		
 	}
 

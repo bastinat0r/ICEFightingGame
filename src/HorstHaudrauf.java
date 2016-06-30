@@ -1,5 +1,4 @@
 import gameInterface.AIInterface;
-import structs.CharacterData;
 import structs.FrameData;
 import structs.GameData;
 import structs.Key;
@@ -11,7 +10,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-public class TestAI implements AIInterface {
+public class HorstHaudrauf implements AIInterface {
 	public Random rnd;
 	private static Key[] action_keymap;
 	private static Key[] action_keymap_reversed;
@@ -165,7 +164,7 @@ public class TestAI implements AIInterface {
 			return max.get(rnd.nextInt(max.size())); /* return randomly selected action from actions with best value */
 		}
 		
-		if (rnd.nextDouble() > exploration_propability) {
+		if (rnd.nextDouble() > exploration_propability2) {
 			ArrayList<Integer> max = posIndex(rewards);
 			if(max.size() > 0)
 				return max.get(rnd.nextInt(max.size())); /* return randomly selected action from actions with best value */
@@ -243,7 +242,6 @@ public class TestAI implements AIInterface {
 	@Override
 	public void processing() {
 		if(!frame.getEmptyFlag() && frame.getRemainingTime() > 0) {
-			CharacterData me = this.cc.getMyCharacter();
 			
 			this.currentState.stateRefresh(this.cc.getEnemyCharacter().getState().toString(),cc.getMyY(),cc.getMyX(),cc.getDistanceX());
 
