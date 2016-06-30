@@ -1,5 +1,4 @@
 import gameInterface.AIInterface;
-import structs.CharacterData;
 import structs.FrameData;
 import structs.GameData;
 import structs.Key;
@@ -11,11 +10,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-public class TestAI implements AIInterface {
+public class HorstHaudrauf implements AIInterface {
 	public Random rnd;
 	private static Key[] action_keymap;
-	private LinkedList<StateAction> actionQueue; 
-	private final int StateActionLength = 100;
+	private static Key[] action_keymap_reversed;
+	private LinkedList<StateAction> actionQueue;
+	private final int StateActionLength = 50;
 	private State currentState;
 	private int lastHPDiff;
 	private int myHP;
@@ -31,7 +31,7 @@ public class TestAI implements AIInterface {
 		// TODO Auto-generated method stub
 		/* Datei Speichern */
 		try {
-			ReadSaveData.saveMatrixData("a", "a", reward_matrix);
+			ReadSaveData.saveMatrixData(game.getMyName(player), game.getOpponentName(player), reward_matrix);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -78,23 +78,37 @@ public class TestAI implements AIInterface {
 				action_keymap[i].C = true;
 			}
 		}
+		action_keymap_reversed = new Key[20];
+		for(int i = 0; i<action_keymap_reversed.length; i++){
+			action_keymap_reversed[i] = new Key();
+			if(i%5 == 0 || i%5 == 1) {
+				action_keymap_reversed[i].R = true;
+			}
+			if(i%5 == 1 || i%5 == 2 || i%5 == 3){
+				action_keymap_reversed[i].D = true;
+			}
+			if(i%5 == 3 || i%5 == 4) {
+				action_keymap_reversed[i].L = true;
+			}
+			if(i >=5 && i < 10) {
+				action_keymap_reversed[i].A = true;
+			}
+			if(i >=10 && i < 15) {
+				action_keymap_reversed[i].B = true;
+			}
+			if(i >=15 && i < 20) {
+				action_keymap_reversed[i].C = true;
+			}
+		}
 		player  = arg1;
 		game = arg0;
 		frame = new FrameData();
 
 		actionQueue = new LinkedList<StateAction>();
 		lastHPDiff = 0;
-		/*
-		action_keymap[0].L = true;
-		action_keymap[1].L = true;
-		action_keymap[1].D = true;
-		action_keymap[2].D = true;
-		action_keymap[3].R = true;
-		action_keymap[3].D = true;
-		action_keymap[4].R = true;
-		 */
 		
-		reward_matrix = ReadSaveData.readMatrixData("a", "a");
+		
+		reward_matrix = ReadSaveData.readMatrixData(game.getMyName(player), game.getOpponentName(player));
 		cc = new CommandCenter();
 		currentState = new State(0);
 		return 0;
@@ -109,6 +123,15 @@ public class TestAI implements AIInterface {
 				maxIndex = new ArrayList<Integer>();
 			}
 			if(values[i] == maxValue){
+				maxIndex.add(i);
+			}
+		}
+		return maxIndex;
+	}
+	private ArrayList<Integer> posIndex(float[] values) {
+		ArrayList<Integer> maxIndex = new ArrayList<Integer>();
+		for (int i = 0; i < values.length; i++) {
+			if(values[i] > 0){
 				maxIndex.add(i);
 			}
 		}
@@ -134,11 +157,19 @@ public class TestAI implements AIInterface {
 		}
 
 
-		float exploration_propability = 0.05f;
+		float exploration_propability = 0.1f;
+		float exploration_propability2 = 0.1f;
 		if (rnd.nextDouble() > exploration_propability) {
 			ArrayList<Integer> max = maxIndex(rewards);
-			max.get(rnd.nextInt(max.size())); /* return randomly selected action from actions with best value */
+			return max.get(rnd.nextInt(max.size())); /* return randomly selected action from actions with best value */
 		}
+		
+		if (rnd.nextDouble() > exploration_propability2) {
+			ArrayList<Integer> max = posIndex(rewards);
+			if(max.size() > 0)
+				return max.get(rnd.nextInt(max.size())); /* return randomly selected action from actions with best value */
+		}
+		
 
 		return rnd.nextInt(20); // return random action
 	}
@@ -148,19 +179,29 @@ public class TestAI implements AIInterface {
 		if(actionQueue.size() > StateActionLength) {
 			StateAction s_fin = actionQueue.remove();
 			MatrixValue v = reward_matrix[s_fin.toInt()][s_fin.action];
-			v.setReward(v.getReward() + s_fin.reward);
-			v.setVisitors(v.getVisitors() + 1);
+			if (s_fin.reward == 0.0f) {
+				v.setReward(v.getReward() + s_fin.reward - 0.1f);
+				v.setVisitors(v.getVisitors() + 1);
+			} else {
+				v.setReward(v.getReward() + s_fin.reward);
+				v.setVisitors(v.getVisitors() + 1);
+			}
 			/*TODO add s_fin to knowledge base -> not only mockup function (replaceme)*/
 			reward_matrix[s_fin.toInt()][s_fin.action] = v;
 			switch (v.getVisitors()) {
-			case 1:
-				System.out.println(s_fin.toInt() + " : " + s_fin.action + " : " + s_fin.reward);
+			case 3:
+				System.out.println(s_fin.toInt() + " : " + s_fin.action + " : " + v.getReward());
 				break;
 
 			case 10:
-				System.out.println("x" + s_fin.toInt() + " : " + s_fin.action + " : " + s_fin.reward);
+				System.out.println("x" + s_fin.toInt() + " : " + s_fin.action + " : " + v.getReward());
+				break;
 			case 100:
-				System.out.println("y" + s_fin.toInt() + " : " + s_fin.action + " : " + s_fin.reward);
+				System.out.println("y" + s_fin.toInt() + " : " + s_fin.action + " : " + v.getReward());
+				break;
+			case 1000:
+				System.out.println("z" + s_fin.toInt() + " : " + s_fin.action + " : " + v.getReward() / v.getVisitors());
+				break;
 			default:
 				break;
 			}
@@ -180,7 +221,7 @@ public class TestAI implements AIInterface {
 			for (Iterator<StateAction> iterator = actionQueue.iterator(); iterator.hasNext();) {
 				StateAction stateAction = (StateAction) iterator.next();
 				stateAction.reward += hpDiff;
-				hpDiff *= 1.05f;
+				hpDiff *= 1.1f;
 			}
 		}
 		lastHPDiff = myHP - enemyHP;
@@ -190,15 +231,18 @@ public class TestAI implements AIInterface {
 		int x = chose_action_from_state(currentState);
 		StateAction s = new StateAction(currentState.toInt(), x);
 		insertStateIntoActionQueue(s);
-		return action_keymap[x];
+		try {
+			return cc.getMyX() < cc.getEnemyX() ? action_keymap[x] : action_keymap_reversed[x]; // reverse Keymap if enemy character is to our left
+		} catch (NullPointerException e) {
+			System.out.println("CC not initialized");
+			return action_keymap[x];
+		}
 	}
 
 	@Override
 	public void processing() {
 		if(!frame.getEmptyFlag() && frame.getRemainingTime() > 0) {
-			CharacterData me = this.cc.getMyCharacter();
 			
-			this.currentState.recordNewHitbox(me.attack.getAttackType(),cc.getMyY(),cc.getMyX(),me.getAttack().getHitAreaNow().getL(),me.getAttack().getHitAreaNow().getR(),me.getAttack().getHitAreaNow().getB(),me.getAttack().getHitAreaNow().getT());
 			this.currentState.stateRefresh(this.cc.getEnemyCharacter().getState().toString(),cc.getMyY(),cc.getMyX(),cc.getDistanceX());
 
 			myHP = frame.getMyCharacter(player).getHp();

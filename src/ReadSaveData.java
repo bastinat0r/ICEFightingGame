@@ -9,7 +9,7 @@ public class ReadSaveData {
 	public static void saveMatrixData(String ownChar, String enemyChar, MatrixValue[][] Matrix) throws Exception 
 	{		
 		Writer fw;
-		fw = new FileWriter( "./data/aiData" + ownChar+"_"+enemyChar+".txt" );
+		fw = new FileWriter( "./data/aiData/" + ownChar+"_"+enemyChar+".txt" );
 		try
 		{
 			for ( int state = 0; state < 1 << 14; state++ ) //jede Kombination der boolschen Zust�nde
@@ -50,7 +50,7 @@ public class ReadSaveData {
 			}
 		}
 		try {
-			FileReader fr = new FileReader("./data/aiData" + ownChar+"_"+enemyChar+".txt");
+			FileReader fr = new FileReader("./data/aiData/" + ownChar+"_"+enemyChar+".txt");
 			BufferedReader br = new BufferedReader(fr);
 			String line = "";
 			int splitPosition;
